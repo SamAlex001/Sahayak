@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthFormData } from '../../types';
 // switched to API-based auth
 import { useAuth } from '../../contexts/AuthContext';
+import { apiFetch } from '../../lib/api';
 
 const AuthForm = () => {
   const navigate = useNavigate();
@@ -39,9 +40,8 @@ const AuthForm = () => {
       }
 
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
-      const res = await fetch(endpoint, {
+      const data = await apiFetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
@@ -49,11 +49,6 @@ const AuthForm = () => {
           role: formData.role
         })
       });
-      if (!res.ok) {
-        const msg = await res.json().catch(() => ({}));
-        throw new Error(msg.error || 'Authentication failed');
-      }
-      const data = await res.json();
       if (data.token) localStorage.setItem('token', data.token);
       await refresh();
       navigate('/dashboard');

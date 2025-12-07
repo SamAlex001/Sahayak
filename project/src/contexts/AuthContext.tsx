@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { apiFetch } from '../lib/api';
 
 interface ApiUser {
   id: string;
@@ -28,9 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
     try {
-      const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
-      if (!res.ok) throw new Error('auth failed');
-      const me = await res.json();
+      const me = await apiFetch('/api/auth/me');
       setUser(me);
     } catch {
       localStorage.removeItem('token');

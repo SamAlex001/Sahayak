@@ -29,8 +29,7 @@ const NotificationDropdown = () => {
     const newSocket = io(SOCKET_URL || "/", { auth: { token } });
 
     newSocket.on("connect", () => {
-      fetch("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })
-        .then((r) => (r.ok ? r.json() : null))
+      apiFetch("/api/auth/me")
         .then((me) => {
           if (me?.id) {
             newSocket.emit("join-notifications", me.id);

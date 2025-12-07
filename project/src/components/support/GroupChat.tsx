@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Send, ArrowLeft } from "lucide-react";
 import { io } from "socket.io-client";
 import { SOCKET_URL } from "../../lib/config";
+import { apiFetch } from "../../lib/api";
 
 
 interface Message {
@@ -52,8 +53,7 @@ const GroupChat: React.FC<GroupChatProps> = ({
   useEffect(() => {
     const token = localStorage.getItem("token");
     // decode light-weight: we only need user id from /auth/me
-    fetch("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => (r.ok ? r.json() : null))
+    apiFetch("/api/auth/me")
       .then((me) => {
         setCurrentUser(me?.id || null);
         // Initialize socket after getting user

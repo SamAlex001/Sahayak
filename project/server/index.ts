@@ -34,9 +34,22 @@ async function startServer() {
 
   const app = express();
   const httpServer = http.createServer(app);
-  const io = new SocketIOServer(httpServer, { cors: { origin: "*" } });
+  // CORS configuration - allow specific origins or all in development
+  const allowedOrigins = process.env.ALLOWED_ORIGINS 
+    ? process.env.ALLOWED_ORIGINS.split(',')
+    : ['http://localhost:5173', 'http://localhost:3000'];
+  
+  const io = new SocketIOServer(httpServer, { 
+    cors: { 
+      origin: process.env.ALLOWED_ORIGINS ? allowedOrigins : "*",
+      credentials: true
+    } 
+  });
   setIo(io);
-  app.use(cors());
+  app.use(cors({
+    origin: process.env.ALLOWED_ORIGINS ? allowedOrigins : "*",
+    credentials: true
+  }));
   app.use(express.json());
   app.use(morgan("dev"));
 
