@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, FileText, Bell } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 import DailyRoutineBuilder from '../components/care-tools/DailyRoutineBuilder';
 import SymptomTracker from '../components/care-tools/SymptomTracker';
 import { RoutineTask } from '../types';

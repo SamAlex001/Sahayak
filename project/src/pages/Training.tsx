@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { BookOpen, Play, Award, CheckCircle, Pause } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { BookOpen, Play, CheckCircle } from "lucide-react";
 
 interface TrainingVideo {
   id: string;
@@ -13,44 +13,69 @@ interface TrainingVideo {
 
 const Training = () => {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [completedVideos, setCompletedVideos] = useState<string[]>([]);
 
-  const videos: TrainingVideo[] = [
-    {
-      id: '1',
-      title: 'Understanding Patient Care Basics',
-      description: 'Learn fundamental patient care techniques and best practices for daily caregiving.',
-      duration: '15:30',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      thumbnail: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80',
-    },
-    {
-      id: '2',
-      title: 'Medication Management',
-      description: 'Master the essentials of medication scheduling, dosage tracking, and safety protocols.',
-      duration: '12:45',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      thumbnail: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&q=80',
-      completed: true
-    },
-    {
-      id: '3',
-      title: 'Emergency Response Training',
-      description: 'Critical information on handling medical emergencies and crisis situations.',
-      duration: '20:15',
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      thumbnail: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80',
+  // Load completed videos from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("completedTrainingVideos");
+    if (saved) {
+      try {
+        setCompletedVideos(JSON.parse(saved));
+      } catch (error) {
+        console.error("Error loading completed videos:", error);
+      }
     }
+  }, []);
+
+  const baseVideos: TrainingVideo[] = [
+    {
+      id: "1",
+      title: "Elderly Care at Home - Complete Guide in Hindi",
+      description:
+        "बुजुर्गों की देखभाल के लिए संपूर्ण गाइड। Learn complete elderly care including daily routines, medication management, and maintaining dignity in Hindi language.",
+      duration: "8:45",
+      videoUrl: "https://www.youtube.com/embed/1RKVajOLdLM",
+      thumbnail: "https://img.youtube.com/vi/1RKVajOLdLM/maxresdefault.jpg",
+    },
+    {
+      id: "2",
+      title: "Home Nursing Care - Patient Care Tips",
+      description:
+        "गृह नर्सिंग देखभाल - Essential home nursing skills for caregivers including bed bathing, patient handling, and basic medical care at home.",
+      duration: "10:15",
+      videoUrl: "https://www.youtube.com/embed/HLGzMgQrlWs",
+      thumbnail: "https://img.youtube.com/vi/HLGzMgQrlWs/maxresdefault.jpg",
+    },
+    {
+      id: "3",
+      title: "CPR Training - First Aid by Indian Red Cross",
+      description:
+        "CPR प्रशिक्षण - Learn life-saving CPR and first aid techniques demonstrated by Indian healthcare professionals for emergency situations.",
+      duration: "6:30",
+      videoUrl: "https://www.youtube.com/embed/hTS6gtaTHcI",
+      thumbnail: "https://img.youtube.com/vi/hTS6gtaTHcI/maxresdefault.jpg",
+    },
   ];
+
+  // Add completed status to videos
+  const videos = baseVideos.map((video) => ({
+    ...video,
+    completed: completedVideos.includes(video.id),
+  }));
 
   const handleVideoClick = (videoId: string) => {
     setActiveVideo(videoId);
-    setIsPlaying(true);
   };
 
-  const togglePlayPause = () => {
-    setIsPlaying(!isPlaying);
+  const markAsComplete = (videoId: string) => {
+    if (!completedVideos.includes(videoId)) {
+      const updated = [...completedVideos, videoId];
+      setCompletedVideos(updated);
+      localStorage.setItem("completedTrainingVideos", JSON.stringify(updated));
+    }
   };
+
+  const currentVideo = videos.find((v) => v.id === activeVideo);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -62,51 +87,94 @@ const Training = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-rose-50 rounded-lg p-4">
-            <h3 className="font-semibold text-rose-900 mb-2">Available Videos</h3>
+            <h3 className="font-semibold text-rose-900 mb-2">
+              Available Videos
+            </h3>
             <p className="text-4xl font-bold text-rose-600">{videos.length}</p>
           </div>
           <div className="bg-green-50 rounded-lg p-4">
             <h3 className="font-semibold text-green-900 mb-2">Completed</h3>
             <p className="text-4xl font-bold text-green-600">
-              {videos.filter(video => video.completed).length}
+              {videos.filter((video) => video.completed).length}
             </p>
           </div>
           <div className="bg-yellow-50 rounded-lg p-4">
             <h3 className="font-semibold text-yellow-900 mb-2">In Progress</h3>
             <p className="text-4xl font-bold text-yellow-600">
-              {videos.filter(video => !video.completed).length}
+              {videos.filter((video) => !video.completed).length}
             </p>
           </div>
         </div>
 
-        {activeVideo && (
+        {activeVideo && currentVideo && (
           <div className="mb-8">
-            <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+            <div className="relative aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
               <iframe
-                src={`${videos.find(v => v.id === activeVideo)?.videoUrl}${isPlaying ? '?autoplay=1' : ''}`}
+                src={`${currentVideo.videoUrl}?autoplay=1&rel=0&modestbranding=1`}
                 className="absolute inset-0 w-full h-full"
-                allow="autoplay; fullscreen"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
                 title="Training Video"
+                frameBorder="0"
               />
-              <button
-                onClick={togglePlayPause}
-                className="absolute bottom-4 right-4 bg-white rounded-full p-2 shadow-lg"
-              >
-                {isPlaying ? (
-                  <Pause className="h-6 w-6 text-rose-600" />
-                ) : (
-                  <Play className="h-6 w-6 text-rose-600" />
-                )}
-              </button>
+            </div>
+            <div className="mt-4 bg-gray-50 rounded-lg p-4">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h3 className="text-lg font-semibold">
+                      {currentVideo.title}
+                    </h3>
+                    {currentVideo.completed && (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    )}
+                  </div>
+                  <p className="text-gray-600">{currentVideo.description}</p>
+                </div>
+                <div className="ml-4 flex flex-col gap-2">
+                  <a
+                    href={currentVideo.videoUrl
+                      .replace("/embed/", "/watch?v=")
+                      .replace("videoseries?list=", "playlist?list=")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <Play className="h-4 w-4" />
+                    Watch on YouTube
+                  </a>
+                  {!currentVideo.completed && (
+                    <button
+                      onClick={() => markAsComplete(activeVideo)}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      Mark as Complete
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="text-sm text-gray-500 bg-blue-50 border-l-4 border-blue-400 p-3 rounded mt-3">
+                <p className="font-medium text-blue-800 mb-1">
+                  💡 Can't see the video?
+                </p>
+                <p className="text-blue-700">
+                  Some videos may have embedding restrictions. Click "Watch on
+                  YouTube" above to view the content directly on YouTube's
+                  website.
+                </p>
+              </div>
             </div>
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {videos.map(video => (
-            <div key={video.id} className="bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-              <div 
+          {videos.map((video) => (
+            <div
+              key={video.id}
+              className="bg-white border rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+            >
+              <div
                 className="relative aspect-video bg-cover bg-center cursor-pointer"
                 style={{ backgroundImage: `url(${video.thumbnail})` }}
                 onClick={() => handleVideoClick(video.id)}

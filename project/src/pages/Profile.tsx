@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { User, Settings } from 'lucide-react';
-import { getProfile, updateProfile } from '../lib/supabase';
+import React, { useState, useEffect } from "react";
+import { User, Settings } from "lucide-react";
+import { getProfile, updateProfile } from "../lib/supabase";
 
 interface ProfileData {
   full_name: string;
@@ -15,19 +15,19 @@ interface ProfileData {
 
 const Profile = () => {
   const [profile, setProfile] = useState<ProfileData>({
-    full_name: '',
-    phone: '',
-    address: '',
-    emergency_contact: '',
+    full_name: "",
+    phone: "",
+    address: "",
+    emergency_contact: "",
     medical_conditions: [],
     is_profile_complete: false,
-    email: '',
-    role: ''
+    email: "",
+    role: "",
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [newCondition, setNewCondition] = useState('');
+  const [newCondition, setNewCondition] = useState("");
 
   useEffect(() => {
     loadProfile();
@@ -37,18 +37,18 @@ const Profile = () => {
     try {
       const data = await getProfile();
       setProfile({
-        full_name: data.full_name || '',
-        phone: data.phone || '',
-        address: data.address || '',
-        emergency_contact: data.emergency_contact || '',
+        full_name: data.full_name || "",
+        phone: data.phone || "",
+        address: data.address || "",
+        emergency_contact: data.emergency_contact || "",
         medical_conditions: data.medical_conditions || [],
         is_profile_complete: data.is_profile_complete || false,
-        email: data.email || '',
-        role: data.role || ''
+        email: data.email || "",
+        role: data.role || "",
       });
       setLoading(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load profile');
+      setError(err instanceof Error ? err.message : "Failed to load profile");
       setLoading(false);
     }
   };
@@ -59,16 +59,28 @@ const Profile = () => {
     setSuccess(false);
 
     try {
-      await updateProfile({
+      const requiredFilled =
+        !!profile.full_name &&
+        !!profile.phone &&
+        !!profile.address &&
+        !!profile.emergency_contact;
+
+      const updated = await updateProfile({
         full_name: profile.full_name,
         phone: profile.phone,
         address: profile.address,
         emergency_contact: profile.emergency_contact,
-        medical_conditions: profile.medical_conditions
+        medical_conditions: profile.medical_conditions,
+        is_profile_complete: requiredFilled,
+        role: profile.role,
+      });
+      setProfile({
+        ...profile,
+        is_profile_complete: updated.is_profile_complete,
       });
       setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update profile');
+      setError(err instanceof Error ? err.message : "Failed to update profile");
     }
   };
 
@@ -76,16 +88,21 @@ const Profile = () => {
     if (newCondition.trim()) {
       setProfile({
         ...profile,
-        medical_conditions: [...profile.medical_conditions, newCondition.trim()]
+        medical_conditions: [
+          ...profile.medical_conditions,
+          newCondition.trim(),
+        ],
       });
-      setNewCondition('');
+      setNewCondition("");
     }
   };
 
   const removeCondition = (index: number) => {
     setProfile({
       ...profile,
-      medical_conditions: profile.medical_conditions.filter((_, i) => i !== index)
+      medical_conditions: profile.medical_conditions.filter(
+        (_, i) => i !== index
+      ),
     });
   };
 
@@ -103,7 +120,9 @@ const Profile = () => {
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex items-center mb-6">
             <Settings className="h-8 w-8 text-rose-600 mr-3" />
-            <h1 className="text-3xl font-bold text-gray-900">Profile Settings</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Profile Settings
+            </h1>
           </div>
 
           {error && (
@@ -137,32 +156,44 @@ const Profile = () => {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Full Name</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Full Name
+              </label>
               <input
                 type="text"
                 value={profile.full_name}
-                onChange={(e) => setProfile({ ...profile, full_name: e.target.value })}
+                onChange={(e) =>
+                  setProfile({ ...profile, full_name: e.target.value })
+                }
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Phone Number
+              </label>
               <input
                 type="tel"
                 value={profile.phone}
-                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                onChange={(e) =>
+                  setProfile({ ...profile, phone: e.target.value })
+                }
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Address</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Address
+              </label>
               <textarea
                 value={profile.address}
-                onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                onChange={(e) =>
+                  setProfile({ ...profile, address: e.target.value })
+                }
                 rows={3}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500"
                 required
@@ -170,11 +201,15 @@ const Profile = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Emergency Contact</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Emergency Contact
+              </label>
               <input
                 type="text"
                 value={profile.emergency_contact}
-                onChange={(e) => setProfile({ ...profile, emergency_contact: e.target.value })}
+                onChange={(e) =>
+                  setProfile({ ...profile, emergency_contact: e.target.value })
+                }
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-rose-500 focus:ring-rose-500"
                 placeholder="Name and phone number"
                 required
@@ -182,7 +217,9 @@ const Profile = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Medical Conditions</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Medical Conditions
+              </label>
               <div className="mt-1 flex space-x-2">
                 <input
                   type="text"
@@ -201,7 +238,10 @@ const Profile = () => {
               </div>
               <div className="mt-2 space-y-2">
                 {profile.medical_conditions.map((condition, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                  >
                     <span>{condition}</span>
                     <button
                       type="button"

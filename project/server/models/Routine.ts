@@ -1,23 +1,35 @@
-import mongoose, { Schema } from 'mongoose';
+import mongoose, { Schema } from "mongoose";
 
 export interface IRoutineTask {
   userId: string;
+  title: string;
+  description?: string;
+  date: string;
   time: string;
-  task: string;
-  category: 'medication' | 'exercise' | 'meal' | 'other';
+  category: "medication" | "exercise" | "meal" | "other";
+  reminderSent?: boolean;
+  externalReminderSent?: boolean;
 }
 
-const RoutineSchema = new Schema<IRoutineTask>({
-  userId: { type: String, required: true, index: true },
-  time: { type: String, required: true },
-  task: { type: String, required: true },
-  category: { type: String, enum: ['medication', 'exercise', 'meal', 'other'], default: 'other' },
-}, { timestamps: true });
+const RoutineSchema = new Schema<IRoutineTask>(
+  {
+    userId: { type: String, required: true, index: true },
+    title: { type: String, required: true },
+    description: { type: String },
+    date: { type: String, required: true },
+    time: { type: String, required: true },
+    category: {
+      type: String,
+      enum: ["medication", "exercise", "meal", "other"],
+      default: "other",
+    },
+    reminderSent: { type: Boolean, default: false },
+    externalReminderSent: { type: Boolean, default: false },
+  },
+  { timestamps: true }
+);
 
-export const RoutineModel = mongoose.model<IRoutineTask>('RoutineTask', RoutineSchema);
-
-
-
-
-
-
+export const RoutineModel = mongoose.model<IRoutineTask>(
+  "RoutineTask",
+  RoutineSchema
+);

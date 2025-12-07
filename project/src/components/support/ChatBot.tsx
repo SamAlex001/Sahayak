@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { MessageSquare, Send, X } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
+import { apiFetch } from '../../lib/api';
 
 interface ChatBotProps {
   groupId: string;
@@ -37,15 +37,9 @@ const ChatBot: React.FC<ChatBotProps> = ({ groupId, groupName, onClose, onComple
       // Add user message immediately
       setMessages(prev => [...prev, { type: 'user', content: userMessage }]);
 
-      // Call the chat function
-      const { data, error } = await supabase.functions.invoke('chat', {
-        body: { message: userMessage, groupName }
-      });
-
-      if (error) throw error;
-
-      // Add bot response
-      setMessages(prev => [...prev, { type: 'bot', content: data.response }]);
+      // Naive bot response (local): echo with a friendly prefix
+      const botReply = `Thanks for sharing! "${userMessage}"`;
+      setMessages(prev => [...prev, { type: 'bot', content: botReply }]);
 
       // Check if we should complete the conversation
       const userResponses = messages.reduce((acc, msg, i) => {
@@ -59,26 +53,9 @@ const ChatBot: React.FC<ChatBotProps> = ({ groupId, groupName, onClose, onComple
       userResponses[`response_${messages.length}`] = userMessage;
 
       if (Object.keys(userResponses).length >= 2) {
-        // Join the group
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Not authenticated');
-
-        const { error: joinError } = await supabase
-          .from('group_members')
-          .insert([{ group_id: groupId, user_id: user.id }]);
-
-        if (joinError) throw joinError;
-
-        // Store chat responses
-        const { error: responseError } = await supabase
-          .from('group_join_responses')
-          .insert([{
-            group_id: groupId,
-            user_id: user.id,
-            responses: userResponses
-          }]);
-
-        if (responseError) throw responseError;
+        // Toggle join via REST and store responses locally
+        await apiFetch(`/api/groups/${groupId}/toggle`, { method: 'POST' });
+        try { localStorage.setItem(`group_join_responses:${groupId}`, JSON.stringify(userResponses)); } catch {}
 
         onComplete(groupId, userResponses);
       }

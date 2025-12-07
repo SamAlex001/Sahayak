@@ -10,9 +10,10 @@ interface ApiUser {
 interface AuthContextType {
   user: ApiUser | null;
   loading: boolean;
+  refresh: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true });
+const AuthContext = createContext<AuthContextType>({ user: null, loading: true, refresh: async () => {} });
 
 export const useAuth = () => useContext(AuthContext);
 
@@ -20,31 +21,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<ApiUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const refresh = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
-      setLoading(false);
+      setUser(null);
       return;
     }
-    fetch('/api/auth/me', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(async (res) => {
-        if (!res.ok) throw new Error('auth failed');
-        return res.json();
-      })
-      .then((me) => {
-        setUser(me);
-      })
-      .catch(() => {
-        localStorage.removeItem('token');
-        setUser(null);
-      })
-      .finally(() => setLoading(false));
+    try {
+      const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) throw new Error('auth failed');
+      const me = await res.json();
+      setUser(me);
+    } catch {
+      localStorage.removeItem('token');
+      setUser(null);
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      await refresh();
+      setLoading(false);
+    })();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, refresh }}>
       {children}
     </AuthContext.Provider>
   );

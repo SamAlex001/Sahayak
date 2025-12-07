@@ -9,22 +9,26 @@ export interface Resource {
   title: string;
   description: string;
   category: string;
-  type: 'article' | 'video' | 'guide';
+  type: "article" | "video" | "guide";
   url: string;
 }
 
 export interface AuthFormData {
   email: string;
   password: string;
-  role?: 'caretaker' | 'patient';
+  confirmPassword?: string;
+  fullName?: string;
+  role?: "caretaker" | "patient";
 }
 
 export interface Appointment {
   id: string;
   title: string;
+  description?: string;
   date: string;
   time: string;
   location: string;
+  phoneNumber?: string;
   notes?: string;
 }
 
@@ -57,14 +61,16 @@ export interface Contact {
   name: string;
   relation: string;
   phone: string;
-  type: 'medical' | 'personal' | 'emergency';
+  type: "medical" | "personal" | "emergency";
 }
 
 export interface RoutineTask {
   id: string;
+  title: string;
+  description?: string;
+  date: string;
   time: string;
-  task: string;
-  category: 'medication' | 'exercise' | 'meal' | 'other';
+  category: "medication" | "exercise" | "meal" | "other";
 }
 
 export interface ForumPost {

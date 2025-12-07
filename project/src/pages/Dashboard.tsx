@@ -5,6 +5,7 @@ import MedicationList from '../components/dashboard/MedicationList';
 import EmergencyContacts from '../components/dashboard/EmergencyContacts';
 import DailyRoutineBuilder from '../components/care-tools/DailyRoutineBuilder';
 import SymptomTracker from '../components/care-tools/SymptomTracker';
+import UpcomingReminders from '../components/dashboard/UpcomingReminders';
 import { Appointment, Medication } from '../types';
 
 const Dashboard = () => {
@@ -36,6 +37,7 @@ const Dashboard = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
+          <UpcomingReminders />
           <AppointmentList appointments={appointments} />
           <MedicationList medications={medications} />
           <EmergencyContacts />
