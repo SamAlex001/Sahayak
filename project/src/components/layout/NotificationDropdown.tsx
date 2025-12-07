@@ -3,6 +3,8 @@ import { Bell } from "lucide-react";
 import { apiFetch } from "../../lib/api";
 import { triggerNotification } from "../../lib/notify";
 import { io } from "socket.io-client";
+import { SOCKET_URL } from "../../lib/config";
+
 
 interface Notification {
   _id: string;
@@ -24,7 +26,7 @@ const NotificationDropdown = () => {
     fetchNotifications();
 
     const token = localStorage.getItem("token");
-    const newSocket = io("/", { auth: { token } });
+    const newSocket = io(SOCKET_URL || "/", { auth: { token } });
 
     newSocket.on("connect", () => {
       fetch("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })

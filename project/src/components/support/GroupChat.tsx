@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Send, ArrowLeft } from "lucide-react";
 import { io } from "socket.io-client";
+import { SOCKET_URL } from "../../lib/config";
+
 
 interface Message {
   _id: string;
@@ -55,7 +57,7 @@ const GroupChat: React.FC<GroupChatProps> = ({
       .then((me) => {
         setCurrentUser(me?.id || null);
         // Initialize socket after getting user
-        const newSocket = io("/", {
+        const newSocket = io(SOCKET_URL || '/', {
           auth: { token },
         });
 
