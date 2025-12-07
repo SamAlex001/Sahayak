@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Send, ArrowLeft } from "lucide-react";
 import { io } from "socket.io-client";
-import { SOCKET_URL } from "../../lib/config";
+import { getSocketUrl } from "../../lib/config";
 import { apiFetch } from "../../lib/api";
 
 
@@ -36,12 +36,7 @@ const GroupChat: React.FC<GroupChatProps> = ({
 
   const loadMessages = useCallback(async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`/api/chats/${groupId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Failed to load messages");
-      const data = await res.json();
+      const data = await apiFetch(`/api/chats/${groupId}`);
       setMessages(data || []);
       setLoading(false);
     } catch (err) {
@@ -57,15 +52,29 @@ const GroupChat: React.FC<GroupChatProps> = ({
       .then((me) => {
         setCurrentUser(me?.id || null);
         // Initialize socket after getting user
-        const newSocket = io(SOCKET_URL || '/', {
+        const socketUrl = getSocketUrl();
+        // In development, empty string uses Vite proxy. In production, must be set.
+        const socketConnectionUrl = socketUrl || (import.meta.env.DEV ? '/' : undefined);
+        if (!socketConnectionUrl && import.meta.env.PROD) {
+          console.error('Cannot initialize Socket.IO: VITE_API_URL is not set');
+          return;
+        }
+        const newSocket = io(socketConnectionUrl, {
           auth: { token },
+          transports: ['websocket', 'polling'], // Ensure both transports are available
         });
 
         newSocket.on("connect", () => {
+          console.log("Socket.IO connected");
           newSocket.emit("join-group", groupId);
           if (me?.id) {
             newSocket.emit("join-notifications", me.id);
           }
+        });
+
+        newSocket.on("connect_error", (error) => {
+          console.error("Socket.IO connection error:", error);
+          // Don't show error to user, Socket.IO will retry automatically
         });
 
         newSocket.on("group-message", (message: Message) => {

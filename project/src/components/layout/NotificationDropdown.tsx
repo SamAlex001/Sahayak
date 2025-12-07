@@ -3,7 +3,7 @@ import { Bell } from "lucide-react";
 import { apiFetch } from "../../lib/api";
 import { triggerNotification } from "../../lib/notify";
 import { io } from "socket.io-client";
-import { SOCKET_URL } from "../../lib/config";
+import { getSocketUrl } from "../../lib/config";
 
 
 interface Notification {
@@ -26,15 +26,31 @@ const NotificationDropdown = () => {
     fetchNotifications();
 
     const token = localStorage.getItem("token");
-    const newSocket = io(SOCKET_URL || "/", { auth: { token } });
+    const socketUrl = getSocketUrl();
+    // In development, empty string uses Vite proxy. In production, must be set.
+    const socketConnectionUrl = socketUrl || (import.meta.env.DEV ? "/" : undefined);
+    if (!socketConnectionUrl && import.meta.env.PROD) {
+      console.error('⚠️ Cannot initialize Socket.IO: VITE_API_URL is not set in Vercel environment variables. Real-time features will not work.');
+      return;
+    }
+    const newSocket = io(socketConnectionUrl, { 
+      auth: { token },
+      transports: ['websocket', 'polling'], // Ensure both transports are available
+    });
 
     newSocket.on("connect", () => {
+      console.log("Socket.IO connected for notifications");
       apiFetch("/api/auth/me")
         .then((me) => {
           if (me?.id) {
             newSocket.emit("join-notifications", me.id);
           }
         });
+    });
+
+    newSocket.on("connect_error", (error) => {
+      console.error("Socket.IO connection error:", error);
+      // Don't show error to user, Socket.IO will retry automatically
     });
 
     newSocket.on("notification", (notification: Notification) => {
