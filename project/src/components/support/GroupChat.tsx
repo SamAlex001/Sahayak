@@ -100,16 +100,10 @@ const GroupChat: React.FC<GroupChatProps> = ({
     if (!newMessage.trim()) return;
 
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`/api/chats/${groupId}`, {
+      await apiFetch(`/api/chats/${groupId}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ message: newMessage.trim() }),
       });
-      if (!res.ok) throw new Error("Failed to send message");
 
       // Clear input immediately
       setNewMessage("");
